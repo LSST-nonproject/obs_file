@@ -71,6 +71,14 @@ datasets: {
         tables:        "raw"
         tables:        "raw_visit"
     }
+    icMatch: {
+        template:      "%(calexp)s/icMatch.fits"
+        python:        "lsst.afw.table.BaseCatalog"
+        persistable:   "BaseCatalog"
+        storage:       "FitsCatalogStorage"
+        tables:        "raw"
+        tables:        "raw_visit"
+    }
     log: {
         template:      "%(calexp)s/logs/run.log"
         python:        "str"

@@ -31,7 +31,7 @@ from .argumentParser import FileArgumentParser
 
 class ProcessFileConfig(ProcessImageTask.ConfigClass):
     """Config for ProcessFile"""
-    doCalibrate = pexConfig.Field(dtype=bool, default=False, doc = "Perform calibration?")
+    doCalibrate = pexConfig.Field(dtype=bool, default=True, doc = "Perform calibration?")
 
 class ProcessFileTask(ProcessImageTask):
     """Process a CCD

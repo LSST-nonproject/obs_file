@@ -35,6 +35,7 @@ import os
 import sys
 
 import lsst.daf.persistence as dafPersist
+import lsst.pex.logging as pexLog
 from lsst.pipe.base.argumentParser import (ArgumentParser, _fixPath, DEFAULT_INPUT_NAME, DEFAULT_CALIB_NAME,
                                            DEFAULT_OUTPUT_NAME)
 from .fileMapper import FileMapper
@@ -69,17 +70,19 @@ class FileArgumentParser(ArgumentParser):
         if args == None:
             args = sys.argv[1:]
 
-        if len(args) > 0 and not (args[0].startswith("-") or args[0].startswith("@")):
-            # note: don't set namespace.input until after running parse_args, else it will get overwritten
-            inputRoot = _fixPath(DEFAULT_INPUT_NAME, args[0])
-            if not os.path.exists(inputRoot):
-                self.error("Error: input=%r not found" % (inputRoot,))
-            if not os.path.isdir(inputRoot):
-                inputRoot, fileName = os.path.split(inputRoot)
-                args[0:1] = [inputRoot, "--id", "calexp=%s" % fileName]
+        if len(args) < 1 or args[0].startswith("-") or args[0].startswith("@"):
+            self.print_help()
+            self.exit("%s: error: Must specify input as first argument" % self.prog)
 
-            if not os.path.isdir(inputRoot):
-                self.error("Error: input=%r is not a directory" % (inputRoot,))
+        # note: don't set namespace.input until after running parse_args, else it will get overwritten
+        inputRoot = _fixPath(DEFAULT_INPUT_NAME, args[0])
+        if not os.path.exists(inputRoot):
+            self.error("Error: input=%r not found" % (inputRoot,))
+        if not os.path.isdir(inputRoot):
+            inputRoot, fileName = os.path.split(inputRoot)
+            args[0:1] = [inputRoot, "--id", "calexp=%s" % fileName]
+        if not os.path.isdir(inputRoot):
+            self.error("Error: input=%r is not a directory" % (inputRoot,))
         
         namespace = argparse.Namespace()
         namespace.input = _fixPath(DEFAULT_INPUT_NAME, args[0])

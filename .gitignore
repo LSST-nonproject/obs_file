@@ -1,0 +1,14 @@
+*.dylib
+*.o
+*.os
+*.pyc
+*.so
+*~
+#*
+*#
+.sconf_temp
+.sconsign.dblite
+config.log
+tests/.tests
+ups/*.cfgc
+python/lsst/obs/file/version.py

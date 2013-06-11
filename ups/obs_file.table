@@ -1,0 +1,8 @@
+setupRequired(daf_persistence)
+setupRequired(afw)
+setupRequired(daf_butlerUtils)
+setupRequired(pipe_tasks)
+
+envAppend(PYTHONPATH, ${PRODUCT_DIR}/python)
+envAppend(PATH, ${PRODUCT_DIR}/bin)
+

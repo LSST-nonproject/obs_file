@@ -27,6 +27,8 @@ import lsst.afw.table as afwTable
 import lsst.pex.config as pexConfig
 import lsst.pipe.base as pipeBase
 
+from .argumentParser import FileArgumentParser
+
 class ProcessFileConfig(ProcessImageTask.ConfigClass):
     """Config for ProcessFile"""
     doCalibrate = pexConfig.Field(dtype=bool, default=False, doc = "Perform calibration?")

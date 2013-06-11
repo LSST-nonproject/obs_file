@@ -10,7 +10,7 @@ class FileMapper(CameraMapper):
     """Provides abstract-physical mapping for data found in the filesystem"""
     
     def __init__(self, **kwargs):
-        policyFile = pexPolicy.DefaultPolicyFile("obs_subaru", "FileMapper.paf", "policy")
+        policyFile = pexPolicy.DefaultPolicyFile("obs_file", "FileMapper.paf", "policy")
         policy = pexPolicy.Policy(policyFile)
         if False:
             if not kwargs.get('root', None):
@@ -79,7 +79,7 @@ class FileMapper(CameraMapper):
 
     @classmethod
     def getEupsProductName(cls):
-        return "obs_subaru"
+        return "obs_file"
 
     @classmethod
     def getCameraName(cls):

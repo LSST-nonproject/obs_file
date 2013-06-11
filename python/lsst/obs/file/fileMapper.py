@@ -3,6 +3,7 @@
 import os
 
 from lsst.daf.butlerUtils import CameraMapper
+import lsst.afw.cameraGeom as afwCg
 import lsst.afw.image.utils as afwImageUtils
 import lsst.pex.policy as pexPolicy
 
@@ -51,7 +52,14 @@ class FileMapper(CameraMapper):
         # next line makes a dict that maps filter names to sequential integers (arbitrarily sorted),
         # for use in generating unique IDs for sources.
         self.filterIdMap = dict(zip(self.filters, range(len(self.filters))))
-    
+
+    def _standardizeExposure(self, mapping, item, dataId, filter=True, trimmed=True):
+        item = super(FileMapper, self)._standardizeExposure(mapping, item, dataId,
+                                                            filter=filter, trimmed=trimmed)
+        detector = afwCg.Ccd(afwCg.Id("Dummy"))
+        item.setDetector(detector)
+        return item
+
     def _setCcdDetector(self, *args):
         pass
 

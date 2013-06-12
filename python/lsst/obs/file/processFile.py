@@ -20,9 +20,8 @@
 # the GNU General Public License along with this program.  If not,
 # see <http://www.lsstcorp.org/LegalNotices/>.
 #
-
 import numpy
-
+import os
 from lsst.pipe.tasks.processImage import ProcessImageTask
 import lsst.afw.image as afwImage
 import lsst.afw.table as afwTable
@@ -33,7 +32,10 @@ from .argumentParser import FileArgumentParser
 
 class ProcessFileConfig(ProcessImageTask.ConfigClass):
     """Config for ProcessFile"""
-    doCalibrate = Field(dtype=bool, default=True, doc="Perform calibration?")
+    doCalibrate = pexConfig.Field(dtype=bool,
+                                  default=os.path.split(os.environ.get("ASTROMETRY_NET_DATA_DIR",
+                                                                       "/None"))[1] != "None",
+                                  doc="Perform calibration?")
     doVariance = Field(dtype=bool, default=False, doc="Calculate variance?")
     doMask = Field(dtype=bool, default=False, doc="Calculate mask?")
     gain = Field(dtype=float, default=0.0, doc="Gain (e/ADU) for image")

@@ -21,17 +21,25 @@
 # see <http://www.lsstcorp.org/LegalNotices/>.
 #
 
+import numpy
+
 from lsst.pipe.tasks.processImage import ProcessImageTask
 import lsst.afw.image as afwImage
 import lsst.afw.table as afwTable
-import lsst.pex.config as pexConfig
+from lsst.pex.config import Field
 import lsst.pipe.base as pipeBase
 
 from .argumentParser import FileArgumentParser
 
 class ProcessFileConfig(ProcessImageTask.ConfigClass):
     """Config for ProcessFile"""
-    doCalibrate = pexConfig.Field(dtype=bool, default=True, doc = "Perform calibration?")
+    doCalibrate = Field(dtype=bool, default=True, doc="Perform calibration?")
+    doVariance = Field(dtype=bool, default=False, doc="Calculate variance?")
+    doMask = Field(dtype=bool, default=False, doc="Calculate mask?")
+    gain = Field(dtype=float, default=0.0, doc="Gain (e/ADU) for image")
+    noise = Field(dtype=float, default=1.0, doc="Noise (ADU) in image")
+    saturation = Field(dtype=float, default=65535, doc="Saturation limit")
+    low = Field(dtype=float, default=0.0, doc="Low limit")
 
 class ProcessFileTask(ProcessImageTask):
     """Process a CCD
@@ -79,8 +87,31 @@ class ProcessFileTask(ProcessImageTask):
         postIsrExposure = sensorRef.get("calexp")
         postIsrExposure.getMaskedImage().getMask()[:] &= \
             afwImage.MaskU.getPlaneBitMask(["SAT", "INTRP", "BAD", "EDGE"])
+        if self.config.doVariance:
+            self.setVariance(postIsrExposure)
+        if self.config.doMask:
+            self.setMask(postIsrExposure)
         
         # delegate the work to ProcessImageTask
         result = self.process(sensorRef, postIsrExposure)
         return result
+
+    def setVariance(self, exposure):
+        mi = exposure.getMaskedImage()
+        image = mi.getImage().getArray()
+        variance = mi.getVariance().getArray()
+        self.log.info("Setting variance: gain=%f e/ADU, noise=%f ADU" % (self.config.gain, self.config.noise))
+        if self.config.gain > 0.0:
+            variance[:] = image/self.config.gain
+        variance += self.config.noise**2
+
+    def setMask(self, exposure):
+        mi = exposure.getMaskedImage()
+        image = mi.getImage().getArray()
+        mask = mi.getMask().getArray()
+        isLow = image < self.config.low
+        isSat = image > self.config.saturation
+        self.log.info("Masking %d low and %d saturated pixels" % (isLow.sum(), isSat.sum()))
+        mask += numpy.where(isLow, afwImage.MaskU.getPlaneBitMask("BAD"), 0)
+        mask += numpy.where(isSat, afwImage.MaskU.getPlaneBitMask("SAT"), 0)
 

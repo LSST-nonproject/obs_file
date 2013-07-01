@@ -109,7 +109,7 @@ datasets: {
     }
     processFile_config: {
         template:      "config/processFile.py"
-        python:        "lsst.obs.subaru.processFile.ProcessFileConfig"
+        python:        "lsst.obs.file.processFile.ProcessFileConfig"
         persistable:   "Config"
         storage:       "ConfigStorage"
         tables:        raw

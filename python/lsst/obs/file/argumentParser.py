@@ -95,9 +95,9 @@ class FileArgumentParser(ArgumentParser):
 
         self.handleCamera(namespace)
 
-        if False:
-            namespace.obsPkg = "file"       # used to find initial overrides
-            self._applyInitialOverrides(namespace)
+        namespace.obsPkg = "obs_file"   # used to find initial overrides
+        namespace.camera = ""
+        self._applyInitialOverrides(namespace)
         if override is not None:
             override(namespace.config)
 

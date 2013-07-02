@@ -32,9 +32,7 @@ from .argumentParser import FileArgumentParser
 
 class ProcessFileConfig(ProcessImageTask.ConfigClass):
     """Config for ProcessFile"""
-    doCalibrate = Field(dtype=bool,
-                        default=os.path.split(os.environ.get("ASTROMETRY_NET_DATA_DIR", "/None"))[1] != "None",
-                                  doc="Perform calibration?")
+    doCalibrate = Field(dtype=bool, default=True, doc="Perform calibration?")
     doVariance = Field(dtype=bool, default=False, doc="Calculate variance?")
     doMask = Field(dtype=bool, default=False, doc="Calculate mask?")
     gain = Field(dtype=float, default=0.0, doc="Gain (e/ADU) for image")

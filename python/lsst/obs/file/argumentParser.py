@@ -32,6 +32,7 @@ in the ArgumentParser may break this FileArgumentParser.
 import argparse
 import getpass
 import os
+import shutil
 import sys
 
 import lsst.daf.persistence as dafPersist

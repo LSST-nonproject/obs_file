@@ -24,6 +24,7 @@ import numpy
 import os
 from lsst.pipe.tasks.processImage import ProcessImageTask
 import lsst.afw.image as afwImage
+import lsst.afw.math as afwMath
 import lsst.afw.table as afwTable
 from lsst.pex.config import Field
 import lsst.pex.exceptions as pexExcept
@@ -33,14 +34,15 @@ from .argumentParser import FileArgumentParser
 
 class ProcessFileConfig(ProcessImageTask.ConfigClass):
     """Config for ProcessFile"""
-    doCalibrate = Field(dtype=bool, default=True, doc="Perform calibration?")
-    doVariance = Field(dtype=bool, default=False, doc="Calculate variance?")
-    doMask = Field(dtype=bool, default=False, doc="Calculate mask?")
-    gain = Field(dtype=float, default=0.0, doc="Gain (e/ADU) for image")
-    noise = Field(dtype=float, default=1.0, doc="Noise (ADU) in image")
-    saturation = Field(dtype=float, default=65535, doc="Saturation limit")
-    low = Field(dtype=float, default=0.0, doc="Low limit")
-
+    doCalibrate=Field(dtype=bool, default=True, doc="Perform calibration?")
+    doVariance=Field(dtype=bool, default=False, doc="Calculate variance?")
+    doMask=Field(dtype=bool, default=False, doc="Calculate mask?")
+    gain=Field(dtype=float, default=0.0, doc="Gain (e/ADU) for image")
+    noise=Field(dtype=float, default=1.0, doc="Noise (ADU) in image")
+    saturation=Field(dtype=float, default=65535, doc="Saturation limit")
+    low=Field(dtype=float, default=0.0, doc="Low limit")
+    isBackgroundSubtracted=Field(dtype=bool, default=False, doc="Input image is already background subtracted")
+    
 class ProcessFileTask(ProcessImageTask):
     """Process a CCD
     
@@ -130,10 +132,18 @@ class ProcessFileTask(ProcessImageTask):
         mi = exposure.getMaskedImage()
         image = mi.getImage().getArray()
         variance = mi.getVariance().getArray()
-        self.log.info("Setting variance: gain=%f e/ADU, noise=%f ADU" % (self.config.gain, self.config.noise))
+        if self.config.isBackgroundSubtracted:
+            bkgdVariance = afwMath.makeStatistics(mi.getImage(), afwMath.VARIANCECLIP).getValue()
+            self.log.info("Setting variance: background variance = %g ADU" % (bkgdVariance))
+        else:
+            self.log.info("Setting variance: noise=%g ADU" % (self.config.noise))
+            bkgdVariance = self.config.noise**2
+
+        variance[:] = bkgdVariance
+
         if self.config.gain > 0.0:
-            variance[:] = image/self.config.gain
-        variance += self.config.noise**2
+            self.log.info("Setting variance: gain=%g e/ADU" % (self.config.gain))
+            variance[:] += image/self.config.gain
 
     def setMask(self, exposure):
         mi = exposure.getMaskedImage()

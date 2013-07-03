@@ -26,6 +26,7 @@ from lsst.pipe.tasks.processImage import ProcessImageTask
 import lsst.afw.image as afwImage
 import lsst.afw.table as afwTable
 from lsst.pex.config import Field
+import lsst.pex.exceptions as pexExcept
 import lsst.pipe.base as pipeBase
 
 from .argumentParser import FileArgumentParser
@@ -83,7 +84,37 @@ class ProcessFileTask(ProcessImageTask):
         self.log.info("Processing %s" % (sensorRef.dataId))
 
         # initialize outputs
-        postIsrExposure = sensorRef.get("calexp")
+        #
+        # Be careful.  If we've already run processFile.py, then there's a copy of the
+        # input file written into the output directory, and the butler will find it before
+        # it finds the original.  We also need to be read straight Fits images with no
+        # mask planes or Wcs
+        #
+        inputFile = sensorRef.get("calexp_filename")[0]
+        fileDir, fileName = os.path.split(inputFile)
+        originalFile = os.path.join(fileDir, "_parent", fileName)
+        if os.path.exists(originalFile):
+            inputFile = originalFile
+
+        try:
+            postIsrExposure = afwImage.ExposureF(inputFile)
+        except pexExcept.LsstCppException, e:
+            etype = e.args[0].getType()
+            if etype == "lsst::afw::fits::FitsError *":
+                import lsst.daf.base as dafBase
+                md = dafBase.PropertyList()
+                mi = afwImage.MaskedImageF(inputFile, md)
+
+                postIsrExposure = afwImage.makeExposure(mi)
+
+                wcs = afwImage.makeWcs(md)
+                if wcs:
+                    postIsrExposure.setWcs(wcs)
+                else:
+                    self.log.warn("No WCS found in %s; caveat emptor" % (sensorRef.dataId))
+            else:
+                raise
+
         postIsrExposure.getMaskedImage().getMask()[:] &= \
             afwImage.MaskU.getPlaneBitMask(["SAT", "INTRP", "BAD", "EDGE"])
         if self.config.doVariance:

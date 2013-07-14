@@ -24,6 +24,7 @@ import numpy
 import os
 from lsst.pipe.tasks.processImage import ProcessImageTask
 import lsst.afw.image as afwImage
+import lsst.afw.cameraGeom as afwCameraGeom
 import lsst.afw.math as afwMath
 import lsst.afw.table as afwTable
 from lsst.pex.config import Field
@@ -37,6 +38,7 @@ class ProcessFileConfig(ProcessImageTask.ConfigClass):
     doCalibrate=Field(dtype=bool, default=True, doc="Perform calibration?")
     doVariance=Field(dtype=bool, default=False, doc="Calculate variance?")
     doMask=Field(dtype=bool, default=False, doc="Calculate mask?")
+    doDetector=Field(dtype=bool, default=True, doc="Add a dummy Detector if none is present")
     gain=Field(dtype=float, default=0.0, doc="Gain (e/ADU) for image")
     noise=Field(dtype=float, default=1.0, doc="Noise (ADU) in image")
     saturation=Field(dtype=float, default=65535, doc="Saturation limit")
@@ -123,6 +125,10 @@ class ProcessFileTask(ProcessImageTask):
             self.setVariance(postIsrExposure)
         if self.config.doMask:
             self.setMask(postIsrExposure)
+        if self.config.doDetector:
+            if postIsrExposure.getDetector() is None:
+                det = afwCameraGeom.Detector(afwCameraGeom.Id(0))
+                postIsrExposure.setDetector(det)
         
         # delegate the work to ProcessImageTask
         result = self.process(sensorRef, postIsrExposure)

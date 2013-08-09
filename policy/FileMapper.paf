@@ -4,7 +4,7 @@ defaultLevel: "file"
 
 exposures: {
     calexp: {
-        template:      "%(calexp)s"
+        template:      "%(calexp)s.fits"
         python:        "lsst.afw.image.ExposureF"
         persistable:   "ExposureF"
         storage:       "FitsStorage"

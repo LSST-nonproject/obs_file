@@ -109,49 +109,12 @@ class FileArgumentParser(ArgumentParser):
         namespace = argparse.ArgumentParser.parse_args(self, args=args, namespace=namespace)
         del namespace.configfile
 
-        namespace.calib = _fixPath(DEFAULT_CALIB_NAME,  namespace.rawCalib)
-        if namespace.rawOutput:
-            namespace.output = _fixPath(DEFAULT_OUTPUT_NAME, namespace.rawOutput)
-        else:
-            namespace.output = None
-            if namespace.rawRerun is None:
-                namespace.rawRerun = getpass.getuser()
-
-        if namespace.rawRerun:
-            if namespace.output:
-                self.error("Error: cannot specify both --output and --rerun")
-            namespace.rerun = tuple(os.path.join(namespace.input, "rerun", v)
-                                    for v in namespace.rawRerun.split(":"))
-            modifiedInput = False
-            if len(namespace.rerun) == 2:
-                namespace.input, namespace.output = namespace.rerun
-                modifiedInput = True
-            elif len(namespace.rerun) == 1:
-                if os.path.exists(namespace.rerun[0]):
-                    namespace.output = namespace.rerun[0]
-                    namespace.input = os.path.realpath(os.path.join(namespace.rerun[0], "_parent"))
-                    modifiedInput = True
-                else:
-                    namespace.output = namespace.rerun[0]
-            else:
-                self.error("Error: invalid argument for --rerun: %s" % namespace.rerun)
-            if modifiedInput:
-                try:
-                    inputMapper = dafPersist.Butler.getMapperClass(namespace.input)
-                except RuntimeError:
-                    inputMapper = None
-                if inputMapper and inputMapper != mapperClass:
-                    self.error("Error: input directory specified by --rerun must have the same mapper as INPUT")
-        else:
-            namespace.rerun = None
-        del namespace.rawInput
-        del namespace.rawCalib
-        del namespace.rawOutput
-        del namespace.rawRerun
+        namespace.calib = _fixPath(DEFAULT_CALIB_NAME,  namespace.calib)
+        namespace.output = _fixPath(DEFAULT_OUTPUT_NAME, namespace.output)
 
         if namespace.clobberOutput:
             if namespace.output is None:
-                self.error("--clobber-output is only valid with --output or --rerun")
+                self.error("--clobber-output is only valid with --output")
             elif namespace.output == namespace.input:
                 self.error("--clobber-output is not valid when the output and input repos are the same")
             if os.path.exists(namespace.output):

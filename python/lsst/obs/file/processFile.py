@@ -123,8 +123,6 @@ class ProcessFileTask(ProcessImageTask):
             self.setVariance(postIsrExposure)
         if self.config.doMask:
             self.setMask(postIsrExposure)
-        if postIsrExposure.getDetector() is None:
-            postIsrExposure.setDetector(None)
         
         # delegate the work to ProcessImageTask
         result = self.process(sensorRef, postIsrExposure)
